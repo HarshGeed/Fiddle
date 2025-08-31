@@ -1,20 +1,10 @@
 
 "use client";
 import { useState } from "react";
+
 import { useHistory } from "../hooks/useHistory";
 import Loader from "../components/Loader";
-
-const TONES = [
-  "Formal",
-  "Casual",
-  "Friendly",
-  "Polite",
-  "Concise",
-  "Detailed",
-  "Playful",
-  "Professional",
-  "Neutral",
-];
+import ToneMatrix from "../components/ToneMatrix";
 
 export default function Home() {
   const {
@@ -55,37 +45,38 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg flex flex-col md:flex-row overflow-hidden">
+      <div className="w-[80vw] h-[80vh] max-w-4xl max-h-[900px] bg-white rounded-lg shadow-lg flex flex-col md:flex-row overflow-hidden">
         {/* Left: Text Editor */}
-        <div className="w-full md:w-1/2 p-4 flex flex-col">
-          <label htmlFor="editor" className="mb-2 font-semibold text-gray-700">
-            Text Editor
-          </label>
-          <textarea
-            id="editor"
-            className="flex-1 min-h-[200px] resize-none border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-800 bg-gray-100"
-            value={text}
-            onChange={e => setText(e.target.value)}
-            disabled={loading}
-            placeholder="Type or paste your text here..."
-          />
-          {error && (
-            <div className="mt-2 text-red-600 text-sm">{error}</div>
-          )}
+        <div className="w-full md:w-1/2 p-6 flex flex-col justify-center">
+          <label htmlFor="editor" className="mb-2 font-semibold text-gray-700 text-lg">Text Editor</label>
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex-1 flex flex-col">
+            {loading ? (
+              <div className="flex-1 min-h-[220px] max-h-[400px] rounded-xl bg-gray-200 animate-pulse" />
+            ) : (
+              <textarea
+                id="editor"
+                className="flex-1 min-h-[220px] max-h-[400px] resize-none rounded-xl border-none outline-none text-lg md:text-xl bg-transparent placeholder-gray-400 transition-all text-black"
+                value={text}
+                onChange={e => setText(e.target.value)}
+                disabled={loading}
+                placeholder="Start typing your content..."
+                spellCheck={true}
+                autoFocus
+              />
+            )}
+            {error && (
+              <div className="mt-2 text-red-600 text-sm">{error}</div>
+            )}
+          </div>
         </div>
         {/* Right: Tone Picker Grid + Controls */}
-        <div className="w-full md:w-1/2 p-4 flex flex-col items-center gap-4 border-t md:border-t-0 md:border-l border-gray-200 bg-gray-50">
-          <div className="grid grid-cols-3 gap-2 w-full">
-            {TONES.map(tone => (
-              <button
-                key={tone}
-                className="py-2 px-2 bg-blue-100 hover:bg-blue-200 rounded font-medium text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
-                onClick={() => handleTone(tone)}
-                disabled={loading || !text.trim()}
-              >
-                {tone}
-              </button>
-            ))}
+        <div className="w-full md:w-1/2 p-4 flex flex-col items-center justify-center gap-6 border-t md:border-t-0 md:border-l border-gray-200 bg-gray-50">
+          <div className="flex flex-1 items-center justify-center w-full h-full">
+            <ToneMatrix
+              onSelect={tone => {
+                if (!loading && text.trim()) handleTone(tone);
+              }}
+            />
           </div>
           <div className="flex gap-2 w-full justify-center mt-2">
             <button
@@ -110,7 +101,7 @@ export default function Home() {
               Redo
             </button>
           </div>
-          {loading && <Loader />}
+          {/* Loading spinner removed; skeleton is now in the text editor */}
         </div>
       </div>
       <div className="mt-4 text-xs text-gray-400 text-center">
