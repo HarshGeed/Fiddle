@@ -7,6 +7,8 @@ import Loader from "../components/Loader";
 import ToneMatrix from "../components/ToneMatrix";
 import TextEditorSkeleton from "../components/TextEditorSkeleton";
 
+// Main page for the Tone Picker Tool
+
 export default function Home() {
   const {
     value: text,
@@ -24,6 +26,8 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
+
+      // Handle tone change: call API and update text
       const res = await fetch("/api/change-tone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,6 +46,8 @@ export default function Home() {
   function handleReset() {
     reset("");
     setError(null);
+
+      // Reset editor and error state
   }
 
   return (

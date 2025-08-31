@@ -1,20 +1,25 @@
+// Custom hook for undo/redo text history, persisted to localStorage
 import { useCallback, useEffect, useReducer } from "react";
 
+// State type for undo/redo history
 type State = {
   past: string[];
   present: string;
   future: string[];
 };
 
+// Action types for reducer
 type Action =
   | { type: "UNDO" }
   | { type: "REDO" }
   | { type: "SET"; newPresent: string }
   | { type: "RESET"; initial: string };
 
+// Reducer to manage undo/redo state
 function historyReducer(state: State, action: Action): State {
   switch (action.type) {
     case "UNDO": {
+      // Undo: move present to future, pop from past
       if (state.past.length === 0) return state;
       const previous = state.past[state.past.length - 1];
       const newPast = state.past.slice(0, -1);
@@ -25,6 +30,7 @@ function historyReducer(state: State, action: Action): State {
       };
     }
     case "REDO": {
+      // Redo: move present to past, shift from future
       if (state.future.length === 0) return state;
       const next = state.future[0];
       const newFuture = state.future.slice(1);
@@ -35,6 +41,7 @@ function historyReducer(state: State, action: Action): State {
       };
     }
     case "SET": {
+      // Set new present, push current to past, clear future
       if (action.newPresent === state.present) return state;
       return {
         past: [...state.past, state.present],
@@ -43,6 +50,7 @@ function historyReducer(state: State, action: Action): State {
       };
     }
     case "RESET": {
+      // Reset history to initial value
       return {
         past: [],
         present: action.initial,
@@ -55,21 +63,25 @@ function historyReducer(state: State, action: Action): State {
 }
 
 
+
 const STORAGE_KEY = "tone-picker-history";
 
-// Clear localStorage for this key on every page load
+
+// Clear localStorage for this key on every page load (so history is always empty after reload)
 if (typeof window !== "undefined") {
   window.localStorage.removeItem(STORAGE_KEY);
 }
 
+
 export function useHistory(initial: string) {
+  // useReducer for undo/redo state
   const [state, dispatch] = useReducer(historyReducer, {
     past: [],
     present: initial,
     future: [],
   });
 
-  // Load from localStorage
+  // Load from localStorage (disabled by clearing above, but kept for completeness)
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -87,7 +99,7 @@ export function useHistory(initial: string) {
     // eslint-disable-next-line
   }, []);
 
-  // Save to localStorage
+  // Save to localStorage on every state change
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
@@ -99,6 +111,7 @@ export function useHistory(initial: string) {
     );
   }, [state]);
 
+  // Expose state and actions
   const set = useCallback((newPresent: string) => {
     dispatch({ type: "SET", newPresent });
   }, []);
