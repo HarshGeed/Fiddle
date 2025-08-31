@@ -1,9 +1,6 @@
-
 "use client";
 import { useState } from "react";
-
 import { useHistory } from "../hooks/useHistory";
-import Loader from "../components/Loader";
 import ToneMatrix from "../components/ToneMatrix";
 import TextEditorSkeleton from "../components/TextEditorSkeleton";
 
