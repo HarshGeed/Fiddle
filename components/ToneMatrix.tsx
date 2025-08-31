@@ -1,18 +1,5 @@
 import React, { useState } from "react";
 
-const TONE_MATRIX = [
-  ["", "Professional", ""],
-  ["Concise", "", "Expanded"],
-  ["", "Casual", ""],
-];
-
-// Map cell positions to tone names
-const TONE_NAMES = [
-  ["Top-Left", "Professional", "Top-Right"],
-  ["Concise", "Neutral", "Expanded"],
-  ["Bottom-Left", "Casual", "Bottom-Right"],
-];
-
 type ToneMatrixProps = {
   onSelect: (tone: string) => void;
 };
@@ -21,24 +8,31 @@ export default function ToneMatrix({ onSelect }: ToneMatrixProps) {
   // selected: [row, col]
   const [selected, setSelected] = useState<[number, number] | null>(null);
 
-  // Helper to get tone name for a cell
-  const getTone = (row: number, col: number) => TONE_NAMES[row][col];
+  // Axes tones
+  const ROW_TONES = ["Professional", "Neutral", "Casual"];
+  const COL_TONES = ["Concise", "Neutral", "Expanded"];
+
+  // Compute blended tone for a cell
+  const getTone = (row: number, col: number) => {
+    if (row === 1 && col === 1) return "Neutral"; // center
+    return `${ROW_TONES[row]} + ${COL_TONES[col]}`;
+  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
       {/* Top label */}
-      <div className="flex justify-center mb-1 h-5">
-        <span className="text-xs font-medium text-gray-500">
-          Professional
-        </span>
+      <div className="flex justify-center mb-2 h-5">
+        <span className="text-xs font-medium text-gray-500">Professional</span>
       </div>
+
       <div className="flex flex-row items-center justify-center">
         {/* Left label */}
-        <div className="flex flex-col justify-center mr-1 h-48">
-          <span className="text-xs font-medium text-gray-500 self-center">
+        <div className="flex flex-col justify-center h-48">
+          <span className="text-xs font-medium text-gray-500 self-center -rotate-90">
             Concise
           </span>
         </div>
+
         {/* Matrix */}
         <div className="grid grid-cols-3 gap-1 w-48 h-48 bg-transparent">
           {[0, 1, 2].map((row) =>
@@ -62,18 +56,18 @@ export default function ToneMatrix({ onSelect }: ToneMatrixProps) {
             ))
           )}
         </div>
+
         {/* Right label */}
-        <div className="flex flex-col justify-center ml-1 h-48">
-          <span className="text-xs font-medium text-gray-500 self-center">
+        <div className="flex flex-col justify-center h-48">
+          <span className="text-xs font-medium text-gray-500 self-center rotate-90">
             Expanded
           </span>
         </div>
       </div>
+
       {/* Bottom label */}
-      <div className="flex justify-center mt-1 h-5">
-        <span className="text-xs font-medium text-gray-500">
-          Casual
-        </span>
+      <div className="flex justify-center mt-2 h-5">
+        <span className="text-xs font-medium text-gray-500">Casual</span>
       </div>
     </div>
   );

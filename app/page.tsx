@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useHistory } from "../hooks/useHistory";
 import Loader from "../components/Loader";
 import ToneMatrix from "../components/ToneMatrix";
+import TextEditorSkeleton from "../components/TextEditorSkeleton";
 
 export default function Home() {
   const {
@@ -51,7 +52,7 @@ export default function Home() {
           <label htmlFor="editor" className="mb-2 font-semibold text-gray-700 text-lg">Text Editor</label>
           <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex-1 flex flex-col">
             {loading ? (
-              <div className="flex-1 min-h-[220px] max-h-[400px] rounded-xl bg-gray-200 animate-pulse" />
+              <TextEditorSkeleton />
             ) : (
               <textarea
                 id="editor"
@@ -101,11 +102,7 @@ export default function Home() {
               Redo
             </button>
           </div>
-          {/* Loading spinner removed; skeleton is now in the text editor */}
         </div>
-      </div>
-      <div className="mt-4 text-xs text-gray-400 text-center">
-        Tone Picker Tool &copy; {new Date().getFullYear()} | Powered by Mistral AI
       </div>
     </main>
   );

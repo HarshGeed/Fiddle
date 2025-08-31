@@ -54,7 +54,13 @@ function historyReducer(state: State, action: Action): State {
   }
 }
 
+
 const STORAGE_KEY = "tone-picker-history";
+
+// Clear localStorage for this key on every page load
+if (typeof window !== "undefined") {
+  window.localStorage.removeItem(STORAGE_KEY);
+}
 
 export function useHistory(initial: string) {
   const [state, dispatch] = useReducer(historyReducer, {
