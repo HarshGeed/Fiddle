@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import Draggable from "react-draggable";
 
 type ToneMatrixProps = {
   onSelect: (tone: string) => void;
@@ -9,77 +10,55 @@ export default function ToneMatrix({ onSelect }: ToneMatrixProps) {
   const COL_TONES = ["Concise", "Neutral", "Expanded"];
 
   const gridRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
 
-  // selected cell [row, col]
-  const [selected, setSelected] = useState<[number, number] | null>([1, 1]);
-  // draggable dot position
+  // Responsive grid size
+  const [gridSize, setGridSize] = useState(192);
+  const DOT_SIZE = 20;
+  const CELL_SIZE = gridSize / 3;
+
+  useEffect(() => {
+    function updateSize() {
+      if (gridRef.current) {
+        setGridSize(gridRef.current.offsetWidth);
+      }
+    }
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
+  const [selected, setSelected] = useState<[number, number]>([1, 1]);
+
+  // Initialize dot in center
   const [dotPos, setDotPos] = useState<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
+    x: CELL_SIZE * 1 + CELL_SIZE / 2 - DOT_SIZE / 2,
+    y: CELL_SIZE * 1 + CELL_SIZE / 2 - DOT_SIZE / 2,
   });
-  const [dragging, setDragging] = useState(false);
 
   const getTone = (row: number, col: number) => {
     if (row === 1 && col === 1) return "Neutral";
     return `${ROW_TONES[row]} + ${COL_TONES[col]}`;
   };
 
-  // Initialize dot position after mount
-  React.useEffect(() => {
-    if (gridRef.current && selected) {
-      const grid = gridRef.current.getBoundingClientRect();
-      const cellSize = grid.width / 3;
-      setDotPos({
-        x: selected[1] * cellSize + cellSize / 2,
-        y: selected[0] * cellSize + cellSize / 2,
-      });
-    }
-  }, [selected]);
+  // Update dot position when selected or grid size changes
+  useEffect(() => {
+    setDotPos({
+      x: selected[1] * CELL_SIZE + CELL_SIZE / 2 - DOT_SIZE / 2,
+      y: selected[0] * CELL_SIZE + CELL_SIZE / 2 - DOT_SIZE / 2,
+    });
+  }, [selected, CELL_SIZE]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setDragging(true);
-    e.stopPropagation();
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!dragging || !gridRef.current) return;
-    const grid = gridRef.current.getBoundingClientRect();
-    let x = e.clientX - grid.left;
-    let y = e.clientY - grid.top;
-
-    // clamp inside grid
-    x = Math.max(0, Math.min(x, grid.width));
-    y = Math.max(0, Math.min(y, grid.height));
-
-    setDotPos({ x, y });
-  };
-
-  const handleMouseUp = () => {
-    if (!dragging || !gridRef.current) return;
-    setDragging(false);
-
-    const grid = gridRef.current.getBoundingClientRect();
-    const cellSize = grid.width / 3;
-    const row = Math.min(2, Math.max(0, Math.floor(dotPos.y / cellSize)));
-    const col = Math.min(2, Math.max(0, Math.floor(dotPos.x / cellSize)));
-
+  const handleStop = (e: any, data: any) => {
+    const row = Math.min(2, Math.max(0, Math.floor((data.y + DOT_SIZE / 2) / CELL_SIZE)));
+    const col = Math.min(2, Math.max(0, Math.floor((data.x + DOT_SIZE / 2) / CELL_SIZE)));
     setSelected([row, col]);
     onSelect(getTone(row, col));
-
     setDotPos({
-      x: col * cellSize + cellSize / 2,
-      y: row * cellSize + cellSize / 2,
+      x: col * CELL_SIZE + CELL_SIZE / 2 - DOT_SIZE / 2,
+      y: row * CELL_SIZE + CELL_SIZE / 2 - DOT_SIZE / 2,
     });
   };
-
-  React.useEffect(() => {
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  });
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
@@ -99,29 +78,37 @@ export default function ToneMatrix({ onSelect }: ToneMatrixProps) {
         {/* Grid container */}
         <div
           ref={gridRef}
-          className="relative grid grid-cols-3 gap-1 w-48 h-48 bg-transparent"
+          className="relative grid grid-cols-3 gap-1 w-32 h-32 sm:w-48 sm:h-48 bg-transparent"
         >
           {[0, 1, 2].map((row) =>
             [0, 1, 2].map((col) => (
-              <div
+              <button
                 key={`${row}-${col}`}
-                className="bg-gray-100 border border-gray-300 rounded-lg w-full h-full"
+                className="bg-gray-100 border border-gray-300 rounded-lg w-full h-full focus:outline-none"
+                style={{ touchAction: "manipulation" }}
+                tabIndex={0}
+                aria-label={getTone(row, col)}
+                onClick={() => {
+                  setSelected([row, col]);
+                  onSelect(getTone(row, col));
+                }}
               />
             ))
           )}
 
-          {/* Draggable orange dot */}
-          {selected && (
+          {/* Draggable dot */}
+          <Draggable
+            nodeRef={dotRef}
+            bounds="parent"
+            position={dotPos}
+            onDrag={(e, data) => setDotPos({ x: data.x, y: data.y })}
+            onStop={handleStop}
+          >
             <div
-              onMouseDown={handleMouseDown}
-              className="absolute w-5 h-5 rounded-full bg-orange-500 ring-2 ring-white cursor-grab active:cursor-grabbing"
-              style={{
-                left: dotPos.x - 10,
-                top: dotPos.y - 10,
-                transition: dragging ? "none" : "0.2s",
-              }}
+              ref={dotRef}
+              className="absolute z-10 w-5 h-5 rounded-full bg-orange-500 ring-2 ring-white cursor-grab active:cursor-grabbing"
             />
-          )}
+          </Draggable>
         </div>
 
         {/* Right label */}
